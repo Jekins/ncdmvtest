@@ -2012,6 +2012,7 @@ exp:`Зона отдыха.`},
 
   // ---- state ----
   let mode = "practice";    // "practice" | "exam" | "flash"
+  let lastRun = "practice"; // исходный запуск: practice|exam|flash|mistakes
   let deck = [];            // prepared questions for this run
   let idx = 0, correct = 0, answered = false, revealed = false;
 
@@ -2057,6 +2058,7 @@ exp:`Зона отдыха.`},
   // ---- start a run ----
   function startRun(m){
     const onlyWrong = (m === "mistakes");
+    lastRun = m;                         // что перезапускать по «Пройти снова»
     mode = onlyWrong ? "practice" : m;   // «работа над ошибками» идёт как тренировка
     let pool;
     if(m === "exam"){
@@ -2068,7 +2070,7 @@ exp:`Зона отдыха.`},
       if(onlyWrong){
         const wrong = loadWrong();
         pool = pool.filter(q=>wrong.has(q.q));
-        if(pool.length === 0){ updateMistakesBtn(); return; }
+        if(pool.length === 0){ show(elStart); return; }
       }
       pool = shuffle(pool);
     }
@@ -2198,6 +2200,8 @@ exp:`Зона отдыха.`},
   function finish(){
     elFill.style.width = "100%";
     const total = deck.length;
+    // после сессии ошибок без оставшихся ошибок повтор бессмыслен — прячем «Пройти снова» (есть «На главную»)
+    elAgain.style.display = (lastRun === "mistakes" && countMistakes() === 0) ? "none" : "";
     if(mode === "flash"){
       elRpct.textContent = total;
       if(elRunit) elRunit.style.display = "none";
@@ -2333,7 +2337,7 @@ exp:`Зона отдыха.`},
   updateMistakesBtn();
   elNext.addEventListener("click", next);
   elQuit.addEventListener("click", ()=>show(elStart));
-  elAgain.addEventListener("click", ()=>{ dismissCelebrate(); startRun(mode); });
+  elAgain.addEventListener("click", ()=>{ dismissCelebrate(); startRun(lastRun); });
   elHome.addEventListener("click", ()=>{ dismissCelebrate(); show(elStart); });
 
   // keyboard: 1-5 to pick, Enter for next
