@@ -68,8 +68,13 @@
     transition:filter .15s,transform .1s}
   .mode-start:hover{filter:brightness(1.06)}
   .mode-start:active{transform:translateY(1px)}
+  .mode-mistakes{background:transparent;color:var(--whiteline);border:1px solid var(--line)}
+  .mode-mistakes:hover{filter:none;border-color:var(--blue);color:var(--blue)}
+  .mode-mistakes:disabled{opacity:.5;cursor:not-allowed;border-color:var(--line);color:var(--muted)}
+  .mode-mistakes:disabled:hover{border-color:var(--line);color:var(--muted)}
   @media (max-width:430px){
-    .practice-row .mode-start{flex:1 1 100%;text-align:center}
+    .practice-row select{flex:1 1 100%}
+    .practice-row .mode-start{flex:1 1 calc(50% - 6px);text-align:center;padding-left:8px;padding-right:8px}
   }
 
   .field{margin-top:20px}
@@ -207,6 +212,8 @@
         <div class="practice-row">
           <select id="cat"><option value="__all">Все темы</option></select>
           <button class="mode-start" data-mode="practice">Начать →</button>
+          <button class="mode-start mode-mistakes" id="mistakesBtn" type="button"
+            title="Тренировка только по вопросам выбранной темы, в которых вы ранее ошиблись">Ошибки</button>
         </div>
       </div>
       <button class="mode" data-mode="flash">
@@ -1971,6 +1978,34 @@ exp:`Зона отдыха.`},
   const elRpct = $("rPct"), elRverdict = $("rVerdict"), elRline = $("rLine"), elRbars = $("rBars"), elRunit = $("rPctUnit");
   const elAgain = $("again"), elHome = $("home");
   const elReview = $("review"), elRlist = $("rlist"), elRfilters = $("rfilters"), elCelebrate = $("celebrate");
+  const elMistakes = $("mistakesBtn");
+
+  // ---- wrong-answer store (localStorage) ----
+  const WRONG_KEY = "ncdmv_wrong_v1";
+  function loadWrong(){
+    try{ return new Set(JSON.parse(localStorage.getItem(WRONG_KEY) || "[]")); }
+    catch(e){ return new Set(); }
+  }
+  function saveWrong(set){
+    try{ localStorage.setItem(WRONG_KEY, JSON.stringify([...set])); }catch(e){}
+  }
+  function markWrong(qtext){ const s = loadWrong(); if(!s.has(qtext)){ s.add(qtext); saveWrong(s); } }
+  function unmarkWrong(qtext){ const s = loadWrong(); if(s.delete(qtext)) saveWrong(s); }
+  function poolForCat(c){
+    if(c === "__all") return QUESTIONS;
+    if(c === "__signs") return QUESTIONS.filter(q=>q.cat.startsWith("Знаки:"));
+    return QUESTIONS.filter(q=>q.cat === c);
+  }
+  function countMistakes(){
+    const wrong = loadWrong();
+    if(wrong.size === 0) return 0;
+    return poolForCat(elCat.value).filter(q=>wrong.has(q.q)).length;
+  }
+  function updateMistakesBtn(){
+    const n = countMistakes();
+    elMistakes.textContent = n ? `Ошибки · ${n}` : "Ошибки";
+    elMistakes.disabled = n === 0;
+  }
 
   const EXAM_N = 25, EXAM_PASS = 0.8;
   const KEYS = ["A","B","C","D","E"];
@@ -2015,22 +2050,26 @@ exp:`Зона отдыха.`},
   function show(sec){
     [elStart, elQuiz, elResults].forEach(s=>s.classList.add("hide"));
     sec.classList.remove("hide");
+    if(sec === elStart) updateMistakesBtn();
     window.scrollTo({top:0, behavior:"instant"});
   }
 
   // ---- start a run ----
   function startRun(m){
-    mode = m;
+    const onlyWrong = (m === "mistakes");
+    mode = onlyWrong ? "practice" : m;   // «работа над ошибками» идёт как тренировка
     let pool;
     if(m === "exam"){
       pool = shuffle(QUESTIONS).slice(0, Math.min(EXAM_N, QUESTIONS.length));
     } else if(m === "flash"){
       pool = shuffle(QUESTIONS.filter(q=>q.cat.startsWith("Знаки:")));
     } else {
-      const c = elCat.value;
-      if(c === "__all") pool = QUESTIONS;
-      else if(c === "__signs") pool = QUESTIONS.filter(q=>q.cat.startsWith("Знаки:"));
-      else pool = QUESTIONS.filter(q=>q.cat===c);
+      pool = poolForCat(elCat.value);
+      if(onlyWrong){
+        const wrong = loadWrong();
+        pool = pool.filter(q=>wrong.has(q.q));
+        if(pool.length === 0){ updateMistakesBtn(); return; }
+      }
       pool = shuffle(pool);
     }
     deck = pool.map(prep);
@@ -2104,9 +2143,11 @@ exp:`Зона отдыха.`},
       if(i === q.a){
         correct++;
         btn.classList.add("correct");
+        unmarkWrong(q.q);
       } else {
         btn.classList.add("wrong");
         buttons[q.a].classList.add("correct");
+        markWrong(q.q);
       }
       elQok.textContent = correct;
       elExpText.textContent = q.exp;
@@ -2142,7 +2183,8 @@ exp:`Зона отдыха.`},
     if(!answered) return;
     if(mode === "exam"){
       const q = deck[idx];
-      if(q.picked === q.a) correct++;
+      if(q.picked === q.a){ correct++; unmarkWrong(q.q); }
+      else markWrong(q.q);
     }
     if(idx < deck.length - 1){
       idx++;
@@ -2286,6 +2328,9 @@ exp:`Зона отдыха.`},
   document.querySelectorAll("[data-mode]").forEach(btn=>{
     btn.addEventListener("click", ()=>startRun(btn.dataset.mode));
   });
+  elMistakes.addEventListener("click", ()=>{ if(!elMistakes.disabled) startRun("mistakes"); });
+  elCat.addEventListener("change", updateMistakesBtn);
+  updateMistakesBtn();
   elNext.addEventListener("click", next);
   elQuit.addEventListener("click", ()=>show(elStart));
   elAgain.addEventListener("click", ()=>{ dismissCelebrate(); startRun(mode); });
