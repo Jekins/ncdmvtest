@@ -46,8 +46,7 @@
 
   /* ---- cards / buttons ---- */
   .card{background:var(--asphalt-2);border:1px solid var(--line);border-radius:14px;padding:20px}
-  .modes{display:grid;gap:14px;margin-top:22px}
-  @media(min-width:560px){.modes{grid-template-columns:1fr 1fr}}
+  .modes{display:grid;grid-template-columns:1fr;gap:14px;margin-top:22px}
   .mode{cursor:pointer;text-align:left;background:var(--asphalt-2);border:1px solid var(--line);border-radius:14px;padding:20px;
     transition:border-color .15s,transform .1s;color:inherit;font:inherit;display:flex;flex-direction:column;gap:6px}
   .mode:hover{border-color:var(--yellow)}
@@ -55,6 +54,20 @@
   .mode .tag{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1.5px;font-size:13px;color:var(--yellow)}
   .mode .name{font-family:'Oswald',sans-serif;font-size:22px;font-weight:600}
   .mode .desc{color:var(--muted);font-size:14px}
+
+  /* practice card holds the theme selector + explicit start button */
+  .mode--practice{cursor:default;gap:10px}
+  .mode--practice:hover{border-color:var(--line)}
+  .mode--practice:focus-within{border-color:var(--yellow)}
+  .practice-row{display:flex;gap:12px;align-items:stretch;margin-top:4px}
+  .practice-row select{flex:1;width:auto}
+  .mode-start{flex:none;white-space:nowrap;cursor:pointer;
+    background:var(--yellow);color:var(--asphalt);border:none;border-radius:10px;
+    padding:12px 24px;font-family:'Oswald',sans-serif;font-weight:600;
+    text-transform:uppercase;letter-spacing:1px;font-size:14px;
+    transition:filter .15s,transform .1s}
+  .mode-start:hover{filter:brightness(1.06)}
+  .mode-start:active{transform:translateY(1px)}
 
   .field{margin-top:20px}
   .field label{display:block;font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px;font-family:'Oswald',sans-serif}
@@ -72,10 +85,9 @@
   .qtext{font-size:19px;font-weight:600;line-height:1.4;margin:6px 0 18px}
 
   /* ---- sign image ---- */
-  .qsign{justify-content:center;align-items:center;margin:0 0 18px;padding:14px;
-    background:var(--asphalt-3);border:1px solid var(--line);border-radius:12px}
-  .qsign svg{width:160px;height:160px;display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
-  .qsign img{max-width:230px;max-height:200px;width:auto;height:auto;display:block;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .qsign{justify-content:center;align-items:center;margin:0 0 18px;min-height:200px}
+  .qsign svg{width:160px;height:160px;display:block}
+  .qsign img{max-width:230px;max-height:200px;width:auto;height:auto;display:block}
   .signfail{color:var(--muted);font-size:14px;text-align:center;padding:10px 6px}
 
   .opts{display:grid;gap:11px}
@@ -91,10 +103,10 @@
   .opt.wrong{background:var(--red-dim);border-color:var(--red)}
   .opt.wrong .key{background:var(--red);border-color:var(--red);color:#2a0a07}
 
-  .exp{margin-top:16px;border-left:3px solid var(--yellow);background:rgba(245,197,24,.07);
+  .exp{margin-top:16px;border-left:3px solid var(--blue);background:var(--asphalt-3);
     border-radius:0 10px 10px 0;padding:13px 15px;font-size:14.5px;color:#d8dde6;display:none}
   .exp.show{display:block}
-  .exp .v{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;color:var(--yellow);margin-bottom:5px}
+  .exp .v{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1.5px;font-size:12px;color:var(--blue);margin-bottom:5px}
 
   .row{display:flex;gap:12px;margin-top:20px;align-items:center;flex-wrap:wrap}
   .btn{cursor:pointer;font:inherit;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;
@@ -106,6 +118,16 @@
   .btn-ghost:hover{color:var(--whiteline);border-color:var(--muted)}
   .btn[disabled]{opacity:.4;cursor:default}
   .spacer{flex:1}
+
+  /* ---- фиксированная нижняя панель кнопок (матовое стекло) ---- */
+  #quiz{padding-bottom:96px}
+  .actionbar{position:fixed;left:0;right:0;bottom:0;z-index:50;pointer-events:none;
+    padding:0 16px calc(14px + env(safe-area-inset-bottom))}
+  .actionbar-inner{max-width:728px;margin:0 auto;display:flex;align-items:center;gap:12px;
+    pointer-events:auto;background:rgba(35,39,47,.55);
+    -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+    border:1px solid var(--line);border-radius:16px;
+    box-shadow:0 12px 32px rgba(0,0,0,.55);padding:16px 20px}
 
   /* ---- results ---- */
   .score-wrap{text-align:center;padding:10px 0 4px}
@@ -124,6 +146,44 @@
   .hide{display:none!important}
   .footnote{color:var(--muted);font-size:12.5px;margin-top:26px;text-align:center;line-height:1.6}
   ::selection{background:var(--yellow);color:#1a1308}
+
+  /* ---- результат: кнопки 50/50 + разбор + фильтры ---- */
+  .actions2{display:flex;gap:12px;margin-top:22px}
+  .actions2 .btn{flex:1;justify-content:center;text-align:center;padding-left:10px;padding-right:10px}
+  .review{margin-top:24px}
+  .rfilters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .rfilter{cursor:pointer;font:inherit;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1px;font-size:13px;
+    padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--asphalt-3);color:var(--muted);transition:background .12s,color .12s}
+  .rfilter.active{background:var(--yellow);color:#1a1308;border-color:var(--yellow)}
+  .rlist{display:grid;gap:10px}
+  .ritem{background:var(--asphalt-3);border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:12px 14px}
+  .ritem.ok{border-left-color:var(--green)}
+  .ritem.no{border-left-color:var(--red)}
+  .ritem .rq{font-size:14.5px;font-weight:600;line-height:1.4;margin-bottom:9px;display:flex;gap:10px;align-items:flex-start}
+  .ritem .rq img{width:48px;height:48px;object-fit:contain;flex:0 0 auto;background:#fff;border-radius:6px;padding:3px}
+  .ritem .ra{font-size:14px;line-height:1.4;display:flex;gap:7px;margin-top:3px}
+  .ritem .ra .t2{flex:0 0 auto;color:var(--muted)}
+  .ritem .ra.youok span:last-child{color:var(--green)}
+  .ritem .ra.youno span:last-child{color:var(--red)}
+  .ritem .ra.right span:last-child{color:var(--green)}
+
+  /* ---- полноэкранный оверлей-анимация ---- */
+  .celebrate{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;overflow:hidden;background:rgba(16,18,22,.88);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px)}
+  .celebrate .cemoji{font-size:80px;line-height:1;animation:cpop .6s cubic-bezier(.2,1.5,.4,1) both}
+  .celebrate .ctitle{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1.5px;font-size:clamp(26px,7vw,38px);font-weight:700;margin-top:14px;animation:crise .5s .12s both}
+  .celebrate .csub{color:#cdd3dc;font-size:16px;line-height:1.5;margin-top:10px;max-width:440px;animation:crise .5s .22s both}
+  .celebrate .chint{color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:1.5px;margin-top:26px;animation:crise .5s .42s both}
+  .celebrate.win .ctitle{color:var(--green)}
+  .celebrate.try .ctitle{color:var(--yellow)}
+  .celebrate.fade{animation:cefade .45s forwards}
+  .chev{font-size:34px;letter-spacing:6px;color:var(--yellow);animation:chevup 1.1s ease-in-out infinite}
+  .confetti{position:absolute;top:-14px;width:9px;height:14px;border-radius:1px;will-change:transform;animation:confall linear infinite}
+  @keyframes cpop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+  @keyframes crise{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes cefade{to{opacity:0;visibility:hidden}}
+  @keyframes chevup{0%,100%{transform:translateY(7px);opacity:.45}50%{transform:translateY(-7px);opacity:1}}
+  @keyframes confall{to{transform:translateY(110vh) rotate(680deg)}}
 </style>
 </head>
 <body>
@@ -136,16 +196,20 @@
     </div>
     <p class="lede">Вопросы построены по официальному North Carolina Driver Handbook (актуальная редакция) и охватывают все 7 глав, включая распознавание дорожных знаков. Вопросы и варианты ответов перемешиваются при каждом запуске.</p>
 
-    <div class="field">
-      <label for="cat">Тема (для тренировки)</label>
-      <select id="cat"><option value="__all">Все темы</option></select>
-    </div>
-
     <div class="modes">
-      <button class="mode" data-mode="practice">
+      <div class="mode mode--practice">
         <span class="tag">Режим</span>
         <span class="name">Тренировка</span>
         <span class="desc">Все вопросы выбранной темы. Разбор и объяснение сразу после ответа.</span>
+        <div class="practice-row">
+          <select id="cat"><option value="__all">Все темы</option></select>
+          <button class="mode-start" data-mode="practice">Начать →</button>
+        </div>
+      </div>
+      <button class="mode" data-mode="flash">
+        <span class="tag">Режим</span>
+        <span class="name">Знаки</span>
+        <span class="desc">Карточки всех дорожных знаков в случайном порядке. Нажмите «Показать», чтобы увидеть описание.</span>
       </button>
       <button class="mode" data-mode="exam">
         <span class="tag">Режим</span>
@@ -161,13 +225,15 @@
     <div class="card">
       <div class="meta">
         <span class="pill" id="qcat">—</span>
-        <span class="counter">Вопрос <b id="qnum">1</b> / <span id="qtot">1</span> · ✓ <b id="qok">0</b></span>
+        <span class="counter"><span id="qlabel">Вопрос</span> <b id="qnum">1</b> / <span id="qtot">1</span><span id="okwrap"> · ✓ <b id="qok">0</b></span></span>
       </div>
       <div class="qtext" id="qtext">…</div>
       <div class="qsign" id="qsign" style="display:none"></div>
       <div class="opts" id="opts"></div>
       <div class="exp" id="exp"><div class="v">Пояснение</div><div id="exptext"></div></div>
-      <div class="row">
+    </div>
+    <div class="actionbar">
+      <div class="actionbar-inner">
         <button class="btn btn-ghost" id="quit">Выйти</button>
         <span class="spacer"></span>
         <button class="btn btn-primary" id="next" disabled>Далее</button>
@@ -180,20 +246,30 @@
     <div class="titlebar"><h1>Результат<span class="sub">NC DMV · письменный тест</span></h1></div>
     <div class="card" style="margin-top:22px">
       <div class="score-wrap">
-        <div class="score"><span id="rPct">0</span><small>%</small></div>
+        <div class="score"><span id="rPct">0</span><small id="rPctUnit">%</small></div>
         <div class="verdict" id="rVerdict">—</div>
         <p class="lede" id="rLine" style="margin-top:10px"></p>
       </div>
       <div class="bars" id="rBars"></div>
-      <div class="row">
+      <div class="actions2">
         <button class="btn btn-primary" id="again">Пройти снова</button>
         <button class="btn btn-ghost" id="home">На главную</button>
+      </div>
+      <div class="review" id="review">
+        <div class="rfilters" id="rfilters">
+          <button class="rfilter active" data-f="all">Все</button>
+          <button class="rfilter" data-f="correct">Правильные</button>
+          <button class="rfilter" data-f="wrong">Не правильные</button>
+        </div>
+        <div class="rlist" id="rlist"></div>
       </div>
     </div>
     <p class="footnote">Тренажёр носит учебный характер и не заменяет официальный handbook. Сверяйтесь с актуальной версией на MyNCDMV.gov — законы и сборы могут меняться.</p>
   </section>
 
 </div>
+
+<div id="celebrate" class="celebrate hide" aria-hidden="true"></div>
 
 <script>
 /* NC DMV practice questions. a = index of correct option (before shuffle). */
@@ -1886,19 +1962,20 @@ exp:`Зона отдыха.`},
   const $ = id => document.getElementById(id);
   const elStart = $("start"), elQuiz = $("quiz"), elResults = $("results");
   const elCat = $("cat"), elFill = $("fill");
-  const elQcat = $("qcat"), elQnum = $("qnum"), elQtot = $("qtot"), elQok = $("qok");
+  const elQcat = $("qcat"), elQnum = $("qnum"), elQtot = $("qtot"), elQok = $("qok"), elQlabel = $("qlabel"), elOkwrap = $("okwrap");
   const elQtext = $("qtext"), elQsign = $("qsign"), elOpts = $("opts"), elExp = $("exp"), elExpText = $("exptext");
   const elNext = $("next"), elQuit = $("quit");
-  const elRpct = $("rPct"), elRverdict = $("rVerdict"), elRline = $("rLine"), elRbars = $("rBars");
+  const elRpct = $("rPct"), elRverdict = $("rVerdict"), elRline = $("rLine"), elRbars = $("rBars"), elRunit = $("rPctUnit");
   const elAgain = $("again"), elHome = $("home");
+  const elReview = $("review"), elRlist = $("rlist"), elRfilters = $("rfilters"), elCelebrate = $("celebrate");
 
   const EXAM_N = 25, EXAM_PASS = 0.8;
   const KEYS = ["A","B","C","D","E"];
 
   // ---- state ----
-  let mode = "practice";    // "practice" | "exam"
+  let mode = "practice";    // "practice" | "exam" | "flash"
   let deck = [];            // prepared questions for this run
-  let idx = 0, correct = 0, answered = false;
+  let idx = 0, correct = 0, answered = false, revealed = false;
 
   // ---- utils ----
   function shuffle(a){
@@ -1920,9 +1997,13 @@ exp:`Зона отдыха.`},
   // ---- populate categories ----
   (function fillCats(){
     const cats = [...new Set(QUESTIONS.map(q=>q.cat))];
-    cats.forEach(c=>{
+    const signCats = cats.filter(c=>c.startsWith("Знаки:"));
+    const order = cats.filter(c=>!c.startsWith("Знаки:"));
+    if(signCats.length) order.push("__signs", ...signCats);
+    order.forEach(c=>{
       const o = document.createElement("option");
-      o.value = c; o.textContent = c;
+      if(c === "__signs"){ o.value = "__signs"; o.textContent = "Все знаки"; }
+      else { o.value = c; o.textContent = c; }
       elCat.appendChild(o);
     });
   })();
@@ -1940,9 +2021,13 @@ exp:`Зона отдыха.`},
     let pool;
     if(m === "exam"){
       pool = shuffle(QUESTIONS).slice(0, Math.min(EXAM_N, QUESTIONS.length));
+    } else if(m === "flash"){
+      pool = shuffle(QUESTIONS.filter(q=>q.cat.startsWith("Знаки:")));
     } else {
       const c = elCat.value;
-      pool = (c === "__all") ? QUESTIONS : QUESTIONS.filter(q=>q.cat===c);
+      if(c === "__all") pool = QUESTIONS;
+      else if(c === "__signs") pool = QUESTIONS.filter(q=>q.cat.startsWith("Знаки:"));
+      else pool = QUESTIONS.filter(q=>q.cat===c);
       pool = shuffle(pool);
     }
     deck = pool.map(prep);
@@ -1977,10 +2062,23 @@ exp:`Зона отдыха.`},
 
     elExp.classList.remove("show");
     elExpText.textContent = "";
+    elOpts.innerHTML = "";
+
+    if(mode === "flash"){
+      revealed = false;
+      elQlabel.textContent = "Знак";
+      elOkwrap.style.display = "none";
+      elOpts.style.display = "none";
+      elNext.disabled = false;
+      elNext.textContent = "Показать";
+      return;
+    }
+
+    elQlabel.textContent = "Вопрос";
+    elOkwrap.style.display = "";
+    elOpts.style.display = "";
     elNext.disabled = true;
     elNext.textContent = (idx === deck.length - 1) ? "Результат" : "Далее";
-
-    elOpts.innerHTML = "";
     q.opts.forEach((text, i)=>{
       const b = document.createElement("button");
       b.className = "opt";
@@ -1998,6 +2096,7 @@ exp:`Зона отдыха.`},
     if(mode === "practice"){
       if(answered) return;
       answered = true;
+      q.picked = i;
       buttons.forEach(b=>b.disabled = true);
       if(i === q.a){
         correct++;
@@ -2023,6 +2122,20 @@ exp:`Зона отдыха.`},
   }
 
   function next(){
+    if(mode === "flash"){
+      if(!revealed){
+        revealed = true;
+        elExpText.textContent = deck[idx].exp;
+        elExp.classList.add("show");
+        elNext.textContent = (idx === deck.length - 1) ? "Завершить" : "Далее";
+      } else if(idx < deck.length - 1){
+        idx++;
+        render();
+      } else {
+        finish();
+      }
+      return;
+    }
     if(!answered) return;
     if(mode === "exam"){
       const q = deck[idx];
@@ -2040,6 +2153,17 @@ exp:`Зона отдыха.`},
   function finish(){
     elFill.style.width = "100%";
     const total = deck.length;
+    if(mode === "flash"){
+      elRpct.textContent = total;
+      if(elRunit) elRunit.style.display = "none";
+      elRverdict.textContent = "Готово";
+      elRverdict.className = "verdict pass";
+      elRline.textContent = `Просмотрено знаков: ${total}.`;
+      elRbars.innerHTML = "";
+      show(elResults);
+      return;
+    }
+    if(elRunit) elRunit.style.display = "";
     const pct = total ? Math.round(correct/total*100) : 0;
     elRpct.textContent = pct;
 
@@ -2054,17 +2178,11 @@ exp:`Зона отдыха.`},
       elRline.textContent = `Правильных ответов: ${correct} из ${total}.`;
     }
 
-    // per-category breakdown
-    const stat = {};
-    deck.forEach(q=>{
-      const ok = (mode==="exam") ? (q.picked===q.a) : undefined;
-      if(!stat[q.cat]) stat[q.cat] = {ok:0, n:0};
-      stat[q.cat].n++;
-      if(ok) stat[q.cat].ok++;
-    });
-
+    // per-category breakdown (экзамен)
     elRbars.innerHTML = "";
     if(mode === "exam"){
+      const stat = {};
+      deck.forEach(q=>{ if(!stat[q.cat]) stat[q.cat]={ok:0,n:0}; stat[q.cat].n++; if(q.picked===q.a) stat[q.cat].ok++; });
       Object.keys(stat).sort().forEach(cat=>{
         const s = stat[cat];
         const p = Math.round(s.ok/s.n*100);
@@ -2077,24 +2195,106 @@ exp:`Зона отдыха.`},
         elRbars.appendChild(row);
       });
     }
+
+    buildReview();
+    elReview.style.display = "";
     show(elResults);
+
+    if(pass){
+      celebrate("win",
+        mode==="exam" ? "Поздравляем!" : "Отлично!",
+        mode==="exam" ? `Экзамен пройден: ${correct} из ${total}. Так держать!` : `Правильных ответов: ${correct} из ${total}. Молодец!`);
+    } else {
+      celebrate("try",
+        "Почти получилось!",
+        mode==="exam" ? "Ты уже близко — разбери ошибки ниже и попробуй ещё раз. Не сдавайся, всё получится!" : "Это тренировка — разбери ошибки ниже и пройди снова. У тебя обязательно получится!");
+    }
   }
 
+  // ---- разбор ответов ----
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function buildReview(){
+    elRlist.innerHTML = "";
+    deck.forEach(q=>{
+      const ok = q.picked === q.a;
+      const it = document.createElement("div");
+      it.className = "ritem " + (ok ? "ok" : "no");
+      it.dataset.ok = ok ? "1" : "0";
+      const you = (q.picked != null && q.opts[q.picked] != null) ? q.opts[q.picked] : "—";
+      let h = `<div class="rq">`;
+      if(q.img && /^https?:\/\//.test(q.img)) h += `<img src="${q.img}" alt="" loading="lazy">`;
+      h += `<span>${esc(q.q)}</span></div>`;
+      h += `<div class="ra ${ok ? "youok" : "youno"}"><span class="t2">Ваш ответ:</span><span>${esc(you)}</span></div>`;
+      if(!ok) h += `<div class="ra right"><span class="t2">Правильный:</span><span>${esc(q.opts[q.a])}</span></div>`;
+      it.innerHTML = h;
+      elRlist.appendChild(it);
+    });
+    applyFilter("all");
+  }
+  function applyFilter(f){
+    [...elRfilters.children].forEach(b=>b.classList.toggle("active", b.dataset.f === f));
+    [...elRlist.children].forEach(it=>{
+      const ok = it.dataset.ok === "1";
+      const showIt = (f === "all") || (f === "correct" && ok) || (f === "wrong" && !ok);
+      it.style.display = showIt ? "" : "none";
+    });
+  }
+  elRfilters.addEventListener("click", e=>{ const b = e.target.closest(".rfilter"); if(b) applyFilter(b.dataset.f); });
+
+  // ---- полноэкранная анимация ----
+  const CONFCOLORS = ["#f5c518","#34a853","#3f7bff","#ea4335","#ffffff"];
+  function celebrate(kind, title, sub){
+    const o = elCelebrate;
+    o.className = "celebrate " + (kind === "win" ? "win" : "try");
+    const head = (kind === "win")
+      ? `<div class="cemoji">🎉</div>`
+      : `<div class="chev">▲ ▲ ▲</div><div class="cemoji">💪</div>`;
+    o.innerHTML = head +
+      `<div class="ctitle">${esc(title)}</div>` +
+      `<div class="csub">${esc(sub)}</div>` +
+      `<div class="chint">нажмите, чтобы продолжить</div>`;
+    if(kind === "win"){
+      for(let i=0;i<130;i++){
+        const c = document.createElement("div");
+        c.className = "confetti";
+        const dur = 2.6 + Math.random()*2.6;
+        c.style.left = (Math.random()*100) + "vw";
+        c.style.background = CONFCOLORS[i % CONFCOLORS.length];
+        c.style.animationDuration = dur + "s";
+        c.style.animationDelay = (-Math.random()*dur) + "s";
+        c.style.width = (7 + Math.random()*5) + "px";
+        c.style.height = (11 + Math.random()*8) + "px";
+        c.style.opacity = (0.7 + Math.random()*0.3).toFixed(2);
+        o.appendChild(c);
+      }
+    }
+    o.classList.remove("hide");
+    clearTimeout(o._t);
+    o._t = setTimeout(dismissCelebrate, kind === "win" ? 3400 : 3800);
+  }
+  function dismissCelebrate(){
+    if(elCelebrate.classList.contains("hide")) return;
+    elCelebrate.classList.add("fade");
+    setTimeout(()=>{ elCelebrate.classList.add("hide"); elCelebrate.classList.remove("fade"); elCelebrate.innerHTML = ""; }, 460);
+  }
+  elCelebrate.addEventListener("click", dismissCelebrate);
+
   // ---- events ----
-  document.querySelectorAll(".mode").forEach(btn=>{
+  document.querySelectorAll("[data-mode]").forEach(btn=>{
     btn.addEventListener("click", ()=>startRun(btn.dataset.mode));
   });
   elNext.addEventListener("click", next);
   elQuit.addEventListener("click", ()=>show(elStart));
-  elAgain.addEventListener("click", ()=>startRun(mode));
-  elHome.addEventListener("click", ()=>show(elStart));
+  elAgain.addEventListener("click", ()=>{ dismissCelebrate(); startRun(mode); });
+  elHome.addEventListener("click", ()=>{ dismissCelebrate(); show(elStart); });
 
   // keyboard: 1-5 to pick, Enter for next
   document.addEventListener("keydown", e=>{
     if(elQuiz.classList.contains("hide")) return;
     if(e.key === "Enter"){ if(!elNext.disabled) next(); return; }
+    if(mode === "flash") return;
     const n = parseInt(e.key,10);
-    if(n>=1 && n<=deck[idx].opts.length){
+    if(deck[idx] && n>=1 && n<=deck[idx].opts.length){
       const b = elOpts.children[n-1];
       if(b && !b.disabled) b.click();
     }
