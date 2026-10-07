@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NC DMV — Тренажёр письменного теста</title>
+<link rel="stylesheet" href="road-scenes.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -314,7 +315,7 @@
       <div class="mode mode--practice">
         <span class="tag">Режим</span>
         <span class="name">Тренировка</span>
-        <span class="desc">Все вопросы выбранной темы. Разбор и объяснение сразу после ответа.</span>
+        <span class="desc">Все вопросы выбранной темы. Пояснения и анимации дорожных ситуаций после ответа.</span>
         <div class="practice-row">
           <select id="cat"><option value="__all">Все темы</option></select>
           <button class="mode-start" data-mode="practice">Начать →</button>
@@ -2237,6 +2238,8 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
 
 
 </script>
+<script src="road-scenarios.js"></script>
+<script src="road-scenes.js"></script>
 <script>
 (function(){
   "use strict";
@@ -2398,6 +2401,7 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
 
   // ---- screen control ----
   function show(sec){
+    if(window.RoadScenes) RoadScenes.stopAll();
     [elStart, elQuiz, elResults, elSignCatalog, elSignDetail].forEach(s=>s.classList.add("hide"));
     sec.classList.remove("hide");
     replayAnim(sec, "screen-in");
@@ -2424,6 +2428,7 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
     const copy = signCopy(q);
     appendText(parent, copy.shortRu || q.exp, "ru");
     if(copy.shortEn) appendText(parent, copy.shortEn, "en", "exp-en");
+    if(window.RoadScenes) RoadScenes.mount(parent, q);
   }
   function revealExplanation(q){
     renderExplanation(elExpText, q);
@@ -2553,6 +2558,7 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
 
   // ---- render current question ----
   function render(){
+    if(window.RoadScenes) RoadScenes.stopAll();
     answered = false;
     persistSession();   // снимок места в пуле (до ответа на текущий вопрос)
     const q = deck[idx];
@@ -2766,7 +2772,7 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
       h += `<div class="ra ${ok ? "youok" : "youno"}"><span class="t2">Ваш ответ:</span><span>${esc(you)}</span></div>`;
       if(!ok) h += `<div class="ra right"><span class="t2">Правильный:</span><span>${esc(q.opts[q.a])}</span></div>`;
       it.innerHTML = h;
-      if(signCopy(q).shortRu){
+      if(signCopy(q).shortRu || window.ROAD_SCENARIOS?.some(s=>s.question===q.q)){
         const explanation = document.createElement("div"); explanation.className = "exp show";
         renderExplanation(explanation, q); it.appendChild(explanation);
       }
