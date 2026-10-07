@@ -39,6 +39,13 @@ for(const a of r.actors)for(let i=2;i<6;i++)for(let t=0;t<=1;t+=.05){const p=tra
 const bus=prepare(factories.schoolBus({divided:true}),{scene:'schoolBus',divided:true});
 assert.deepEqual(bus.actors[1].positions[1],bus.actors[1].positions[3],'Following car must stay stopped');
 assert.notEqual(bus.actors[2].positions[1].x,bus.actors[2].positions[3].x,'Opposite carriageway remains open');
+const median=factories.median();
+assert.deepEqual(median.actors[0].positions[1],median.actors[0].positions[2],'Wait for the first carriageway to clear');
+assert.deepEqual(median.actors[0].positions[3],median.actors[0].positions[4],'Wait separately in the median');
+for(let f=0;f<median.steps.length-1;f+=.01){
+  const poses=median.actors.map(a=>{const i=Math.floor(f),v=f-i;return travel(a.positions[i],a.positions[i+1],v*v*(3-2*v),median.kind);});
+  for(const other of poses.slice(1))assert.ok(Math.hypot(poses[0].x-other.x,poses[0].y-other.y)>=30,'Median crossing must not overlap either traffic stream');
+}
 // A north-to-east right turn must follow the paved junction instead of cutting the southeast corner.
 for(let t=0;t<=1;t+=.02){const p=travel({x:330,y:285,a:-90},{x:510,y:210,a:0},t,'intersection');assert.ok(p.x<=360||p.y<=240,'Turn cuts across curb');}
 assert.ok(html.includes('RoadScenes.mount(parent, q)'));
