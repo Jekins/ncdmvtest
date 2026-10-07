@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Проверка дорожных сюжетов</title>
+<link rel="stylesheet" href="../road-scenes.css">
+<style>
+:root{--line:#3a4150;--yellow:#f5c518;--whiteline:#eef1f5;--muted:#a5afbd}
+body{margin:0;background:#1a1d23;color:var(--whiteline);font:16px/1.5 system-ui,sans-serif}
+main{max-width:680px;margin:24px auto;padding:16px}select{width:100%;padding:12px;background:#2d323c;color:inherit;font:inherit;border:1px solid var(--line);border-radius:8px}
+.btn{cursor:pointer;font:inherit;border:1px solid var(--line);border-radius:9px;background:transparent;color:inherit;padding:12px}.btn:disabled{opacity:.4;cursor:default}.btn:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
+.exp{background:#2d323c;border-radius:12px;padding:16px;margin-top:16px}#status{font-size:14px}#question{font-weight:600}
+</style>
+<main>
+  <h1>Дорожные сюжеты</h1>
+  <p id="status" role="status">Проверка всех связей…</p>
+  <label for="scenario">Ситуация</label>
+  <select id="scenario"></select>
+  <div class="exp"><p id="question"></p><div id="explanation"></div></div>
+</main>
+<script src="../road-scenarios.js"></script>
+<script src="../road-scenes.js"></script>
+<script>
+(async()=>{
+  // Test fixture uses the actual question data, including questions restored from a session.
+  const html=await (await fetch('../index.html')).text();
+  const data=html.match(/const QUESTIONS = \[([\s\S]*?)\n\];/)[0];
+  const questions=Function(data+';return QUESTIONS')();
+  const select=document.getElementById('scenario'),out=document.getElementById('explanation');
+  const failures=[];
+  for(const [i,c] of ROAD_SCENARIOS.entries()){
+    const matches=questions.filter(q=>q.q===c.question&&!q.img);
+    if(matches.length!==1)failures.push(c.title+': invalid question mapping');
+    if(!RoadScenes.sceneNames.includes(c.scene))failures.push(c.title+': missing factory');
+    const holder=document.createElement('div');document.body.append(holder);
+    try{RoadScenes.mount(holder,{...matches[0]});if(!holder.querySelector('svg'))failures.push(c.title+': no SVG');if(holder.querySelector('[transform*="NaN"]'))failures.push(c.title+': invalid coordinates');}catch(e){failures.push(c.title+': '+e.message);}
+    holder.remove();
+    const option=document.createElement('option');option.value=i;option.textContent=c.title;select.append(option);
+  }
+  document.getElementById('status').textContent=failures.length?failures.join('\n'):`Проверено: ${ROAD_SCENARIOS.length} сюжетов, ${questions.filter(q=>!q.img).length} вопросов. Ошибок нет.`;
+  document.getElementById('status').dataset.failures=failures.length;
+  function show(){RoadScenes.stopAll();out.replaceChildren();const c=ROAD_SCENARIOS[select.value];const q=questions.find(q=>q.q===c.question);document.getElementById('question').textContent=q.q;const exp=document.createElement('p');exp.textContent=q.exp;out.append(exp);RoadScenes.mount(out,q);}
+  select.addEventListener('change',show);select.value=ROAD_SCENARIOS.findIndex(c=>c.scene==='allStop');show();
+})();
+</script>
+</html>
