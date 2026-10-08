@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Проверка дорожных сюжетов</title>
-<link rel="stylesheet" href="../road-scenes.css?v=20261007.1">
+<link rel="stylesheet" href="../road-scenes.css?v=20261007.2">
 <style>
 :root{--line:#3a4150;--yellow:#f5c518;--whiteline:#eef1f5;--muted:#a5afbd}
 body{margin:0;background:#1a1d23;color:var(--whiteline);font:16px/1.5 system-ui,sans-serif}
@@ -18,8 +18,8 @@ main{max-width:680px;margin:24px auto;padding:16px}select{width:100%;padding:12p
   <select id="scenario"></select>
   <div class="exp"><p id="question"></p><div id="explanation"></div></div>
 </main>
-<script src="../road-scenarios.js?v=20261007.1"></script>
-<script src="../road-scenes.js?v=20261007.1"></script>
+<script src="../road-scenarios.js?v=20261007.2"></script>
+<script src="../road-scenes.js?v=20261007.2"></script>
 <script>
 (async()=>{
   // Test fixture uses the actual question data, including questions restored from a session.
@@ -33,7 +33,19 @@ main{max-width:680px;margin:24px auto;padding:16px}select{width:100%;padding:12p
     if(matches.length!==1)failures.push(c.title+': invalid question mapping');
     if(!RoadScenes.sceneNames.includes(c.scene))failures.push(c.title+': missing factory');
     const holder=document.createElement('div');document.body.append(holder);
-    try{RoadScenes.mount(holder,{...matches[0]});if(!holder.querySelector('svg'))failures.push(c.title+': no SVG');if(holder.querySelector('[transform*="NaN"]'))failures.push(c.title+': invalid coordinates');}catch(e){failures.push(c.title+': '+e.message);}
+    try{
+      RoadScenes.mount(holder,{...matches[0]});
+      if(!holder.querySelector('svg'))throw Error('no SVG');
+      holder.querySelector('.road-demo-toggle').click();
+      const next=[...holder.querySelectorAll('button')].find(b=>b.textContent==='Шаг →');
+      while(!next.disabled){next.click();if(holder.querySelector('[transform*="NaN"],[d*="NaN"]'))throw Error('invalid coordinates');}
+      for(const n of holder.querySelectorAll('svg *'))for(const attr of ['fill','stroke','filter','marker-end']){
+        const id=n.getAttribute(attr)?.match(/^url\(#(.+)\)$/)?.[1];
+        if(id&&!holder.querySelector('[id="'+id+'"]'))throw Error('missing SVG paint server: '+id);
+      }
+      const toggle=holder.querySelector('.rd-guide-toggle input');toggle.click();
+      if(holder.querySelector('.rd-routes').getAttribute('visibility')!=='hidden')throw Error('route toggle does not hide guides');
+    }catch(e){failures.push(c.title+': '+e.message);}
     holder.remove();
     const option=document.createElement('option');option.value=i;option.textContent=c.title;select.append(option);
   }
