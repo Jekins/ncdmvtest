@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Проверка дорожных сюжетов</title>
-<link rel="stylesheet" href="../road-scenes.css?v=20261007.2">
+<link rel="stylesheet" href="../road-scenes.css?v=20261007.3">
 <style>
 :root{--line:#3a4150;--yellow:#f5c518;--whiteline:#eef1f5;--muted:#a5afbd}
 body{margin:0;background:#1a1d23;color:var(--whiteline);font:16px/1.5 system-ui,sans-serif}
@@ -18,8 +18,8 @@ main{max-width:680px;margin:24px auto;padding:16px}select{width:100%;padding:12p
   <select id="scenario"></select>
   <div class="exp"><p id="question"></p><div id="explanation"></div></div>
 </main>
-<script src="../road-scenarios.js?v=20261007.2"></script>
-<script src="../road-scenes.js?v=20261007.2"></script>
+<script src="../road-scenarios.js?v=20261007.3"></script>
+<script src="../road-scenes.js?v=20261007.3"></script>
 <script>
 (async()=>{
   // Test fixture uses the actual question data, including questions restored from a session.
@@ -39,6 +39,9 @@ main{max-width:680px;margin:24px auto;padding:16px}select{width:100%;padding:12p
       holder.querySelector('.road-demo-toggle').click();
       const next=[...holder.querySelectorAll('button')].find(b=>b.textContent==='Шаг →');
       while(!next.disabled){next.click();if(holder.querySelector('[transform*="NaN"],[d*="NaN"]'))throw Error('invalid coordinates');}
+      const seek=holder.querySelector('.rd-seek');
+      // Exercise the real draw function between storyboard keyframes as well.
+      for(let t=0;t<=Number(seek.max);t+=.125){seek.value=t;seek.dispatchEvent(new Event('input'));if(holder.querySelector('[transform*="NaN"],[d*="NaN"],[opacity*="NaN"]'))throw Error('invalid intermediate frame');}
       for(const n of holder.querySelectorAll('svg *'))for(const attr of ['fill','stroke','filter','marker-end']){
         const id=n.getAttribute(attr)?.match(/^url\(#(.+)\)$/)?.[1];
         if(id&&!holder.querySelector('[id="'+id+'"]'))throw Error('missing SVG paint server: '+id);
@@ -53,6 +56,19 @@ main{max-width:680px;margin:24px auto;padding:16px}select{width:100%;padding:12p
   document.getElementById('status').dataset.failures=failures.length;
   function show(){RoadScenes.stopAll();out.replaceChildren();const c=ROAD_SCENARIOS[select.value];const q=questions.find(q=>q.q===c.question);document.getElementById('question').textContent=q.q;const exp=document.createElement('p');exp.textContent=q.exp;out.append(exp);RoadScenes.mount(out,q);}
   select.addEventListener('change',show);select.value=ROAD_SCENARIOS.findIndex(c=>c.scene==='allStop');show();
+  // A contact sheet makes a visual audit of every scene family repeatable.
+  const galleryStart=new URL(location.href).searchParams.get('gallery');
+  if(galleryStart!==null){
+    document.querySelector('main').hidden=true;
+    const gallery=document.createElement('main');gallery.style.cssText='max-width:1280px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px';
+    const families=[...new Map(ROAD_SCENARIOS.map(c=>[c.scene,c])).values()];
+    for(const c of families.slice(Number(galleryStart),Number(galleryStart)+9)){
+      const holder=document.createElement('section');holder.className='road-demo';gallery.append(holder);document.body.append(gallery);
+      RoadScenes.mount(holder,questions.find(q=>q.q===c.question));holder.querySelector('.road-demo-toggle').click();RoadScenes.stopAll();
+      const seek=holder.querySelector('.rd-seek');seek.value=Number(seek.max)*.88;seek.dispatchEvent(new Event('input'));
+      const svg=holder.querySelector('svg'),caption=holder.querySelector('.rd-caption'),title=holder.querySelector('h3');holder.replaceChildren(title,svg,caption);
+    }
+  }
 })();
 </script>
 </html>
