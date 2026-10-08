@@ -10,7 +10,7 @@ vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(root,'road-scenarios.js'),'utf8'),ctx);
 const source=fs.readFileSync(path.join(root,'road-scenes.js'),'utf8');
 // Load the pure storyboard builders without invoking the DOM player.
-vm.runInContext(source.slice(0,source.indexOf('  function road(svg,s){'))+'return {factories,prepare,travel};})();',ctx);
+vm.runInContext(source.slice(0,source.indexOf('  function road('))+'return {factories,prepare,travel};})();',ctx);
 const {factories,prepare,travel}=ctx.window.RoadScenes;
 const configs=ctx.window.ROAD_SCENARIOS;
 assert.equal(questions.filter(q=>!q.img).length,305);
