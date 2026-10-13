@@ -315,7 +315,7 @@
       <div class="mode mode--practice">
         <span class="tag">Режим</span>
         <span class="name">Тренировка</span>
-        <span class="desc">Все вопросы выбранной темы. Пояснения и анимации дорожных ситуаций после ответа.</span>
+        <span class="desc">Все вопросы выбранной темы без распознавания знаков. Пояснения и анимации дорожных ситуаций после ответа.</span>
         <div class="practice-row">
           <select id="cat"><option value="__all">Все темы</option></select>
           <button class="mode-start" data-mode="practice">Начать →</button>
@@ -2249,8 +2249,8 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
   const elStart = $("start"), elQuiz = $("quiz"), elResults = $("results");
   const elSignCatalog = $("signCatalog"), elSignGrid = $("signGrid"), elSignDetail = $("signDetail");
   const SIGN_QUESTIONS = QUESTIONS.filter(q=>q.cat.startsWith("Знаки:"));
-  const EXAM_QUESTIONS = QUESTIONS.filter(q=>!q.cat.startsWith("Знаки:") && !q.signRecognition);
-  const EXAM_QUESTION_TEXTS = new Set(EXAM_QUESTIONS.map(q=>q.q));
+  const RULE_QUESTIONS = QUESTIONS.filter(q=>!q.cat.startsWith("Знаки:") && !q.signRecognition);
+  const RULE_QUESTION_TEXTS = new Set(RULE_QUESTIONS.map(q=>q.q));
   const SIGN_BY_IMAGE = new Map(SIGN_QUESTIONS.map(q=>[q.img,q]));
   const elHandbookOnly = $("handbookOnly"), elSignCount = $("signCount");
   const SIGN_FILTER_KEY = "ncdmv_handbook_only_v1";
@@ -2298,8 +2298,8 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
   }
   function getSession(type, cat){
     const s = loadSessions()[sessionKey(type, cat)];
-    // Discard legacy exams containing signs so they cannot bypass the new pool.
-    if(type === "exam" && Array.isArray(s?.deck) && s.deck.some(q=>!EXAM_QUESTION_TEXTS.has(q.q))){
+    // Discard legacy runs containing signs so they cannot bypass the rules-only pool.
+    if(Array.isArray(s?.deck) && s.deck.some(q=>!RULE_QUESTION_TEXTS.has(q.q))){
       clearSession(type, cat);
       return null;
     }
@@ -2318,9 +2318,8 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
   function markWrong(qtext){ const s = loadWrong(); if(!s.has(qtext)){ s.add(qtext); saveWrong(s); } }
   function unmarkWrong(qtext){ const s = loadWrong(); if(s.delete(qtext)) saveWrong(s); }
   function poolForCat(c){
-    if(c === "__all") return QUESTIONS;
-    if(c === "__signs") return QUESTIONS.filter(q=>q.cat.startsWith("Знаки:"));
-    return QUESTIONS.filter(q=>q.cat === c);
+    if(c === "__all") return RULE_QUESTIONS;
+    return RULE_QUESTIONS.filter(q=>q.cat === c);
   }
   function countMistakes(){
     const wrong = loadWrong();
@@ -2394,14 +2393,10 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
 
   // ---- populate categories ----
   (function fillCats(){
-    const cats = [...new Set(QUESTIONS.map(q=>q.cat))];
-    const signCats = cats.filter(c=>c.startsWith("Знаки:"));
-    const order = cats.filter(c=>!c.startsWith("Знаки:"));
-    if(signCats.length) order.push("__signs", ...signCats);
-    order.forEach(c=>{
+    const cats = [...new Set(RULE_QUESTIONS.map(q=>q.cat))];
+    cats.forEach(c=>{
       const o = document.createElement("option");
-      if(c === "__signs"){ o.value = "__signs"; o.textContent = "Все знаки"; }
-      else { o.value = c; o.textContent = c; }
+      o.value = c; o.textContent = c;
       elCat.appendChild(o);
     });
   })();
@@ -2544,7 +2539,7 @@ handbookPages:[85], shortRu:`Впереди зона отдыха.`, shortEn:`A 
     mode = onlyWrong ? "practice" : m;   // «работа над ошибками» идёт как тренировка
     let pool;
     if(m === "exam"){
-      pool = shuffle(EXAM_QUESTIONS).slice(0, Math.min(EXAM_N, EXAM_QUESTIONS.length));
+      pool = shuffle(RULE_QUESTIONS).slice(0, Math.min(EXAM_N, RULE_QUESTIONS.length));
     } else if(m === "flash"){
       pool = shuffle(signPool());
     } else {
